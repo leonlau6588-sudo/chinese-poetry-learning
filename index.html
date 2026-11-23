@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古诗中文学习 · Aprender Chino con Poesía</title>
+    <!-- Tesseract.js OCR 引擎 -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- HanziWriter 汉字笔顺动画引擎 -->
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@2.2/dist/hanzi-writer.min.js"></script>
+    <style>
+        /* ========== 全局变量 ========== */
+        :root {
+            --bg-main: #fef9f3;
+            --bg-card: #ffffff;
+            --primary: #e8786a;
+            --primary-light: #f4b4a0;
+            --primary-dark: #d45b4a;
+            --secondary: #6cbfa5;
+            --secondary-light: #a8dcc8;
+            --accent: #f5c45e;
+            --accent-light: #fae09a;
+            --text-dark: #3d3d3d;
+            --text-medium: #6d6d6d;
+            --text-light: #999999;
+            --border-soft: #f0e6d9;
+            --shadow-soft: 0 4px 20px rgba(232, 120, 106, 0.12);
+            --shadow-hover: 0 8px 30px rgba(232, 120, 106, 0.22);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --tian-color: #e8c9b0;
+            --tian-grid: #d4a886;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+            background: var(--bg-main);
+            color: var(--text-dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ========== 背景装饰 ========== */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-decoration .cloud {
+            position: absolute;
+            opacity: 0.06;
+        }
+        .bg-decoration .cloud-1 { top: 5%; left: 3%; width: 200px; }
+        .bg-decoration .cloud-2 { top: 15%; right: 5%; width: 180px; }
+        .bg-decoration .cloud-3 { bottom: 10%; left: 8%; width: 160px; }
+        .bg-decoration .cloud-4 { bottom: 20%; right: 3%; width: 220px; }
+
+        .bg-decoration::before {
+            content: "";
+            position: absolute;
+            top: -10%;
+            left: -5%;
+            width: 40%;
+            height: 40%;
+            background: radial-gradient(circle, rgba(245, 196, 94, 0.15), transparent 70%);
+            border-radius: 50%;
+        }
+        .bg-decoration::after {
+            content: "";
+            position: absolute;
+            bottom: -10%;
+            right: -5%;
+            width: 45%;
+            height: 45%;
+            background: radial-gradient(circle, rgba(108, 191, 165, 0.12), transparent 70%);
+            border-radius: 50%;
+        }
+
+        /* ========== 主容器 ========== */
+        .app-container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+        }
+
+        /* ========== 顶部标题区 ========== */
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 2rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+        .header .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-medium);
+            font-style: italic;
+        }
+        .header .lantern {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.8;
+            animation: sway 3s ease-in-out infinite;
+        }
+        .header .lantern.left { left: 10%; top: 10%; }
+        .header .lantern.right { right: 10%; top: 10%; animation-delay: 1.5s; }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        /* ========== 输入区域 ========== */
+        .input-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-soft);
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 2px solid var(--border-soft);
+        }
+        .upload-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(232, 120, 106, 0.3);
+        }
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(232, 120, 106, 0.4);
+        }
+        .upload-btn:active { transform: translateY(0); }
+
+        .text-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 16px;
+            border: 2px solid var(--border-soft);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            transition: border-color 0.3s;
+            background: var(--bg-main);
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .text-input::placeholder { color: var(--text-light); }
+
+        #fileInput { display: none; }
+
+        .generate-btn {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+            color: white;
+            padding: 10px 24px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(108, 191, 165, 0.3);
+        }
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(108, 191, 165, 0.4);
+        }
+        .generate-btn:active { transform: translateY(0); }
+
+        .ocr-status {
+            width: 100%;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--primary);
+            display: none;
+            padding: 8px;
+            background: var(--accent-light);
+            border-radius: var(--radius-sm);
+        }
+        .ocr-status.show { display: block; }
+
+        /* ========== 五栏布局 ========== */
+        .poem-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-soft);
+            padding: 24px;
+            border: 2px solid var(--border-soft);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 16px;
+        }
+        .section-title .icon {
+            font-size: 1.3rem;
+        }
+        .section-title .es-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        /* ========== 第一栏：文字信息栏（带拼音） ========== */
+        .poem-text-section {
+            background: linear-gradient(135deg, #fffaf5, #fff);
+        }
+        .poem-text {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+        }
+        .poem-line {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .poem-char {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 8px;
+            transition: all 0.25s;
+            min-width: 36px;
+        }
+        .poem-char:hover {
+            background: var(--accent-light);
+            transform: translateY(-3px);
+        }
+        .poem-char.selected {
+            background: var(--primary-light);
+            transform: translateY(-3px);
+        }
+        .poem-char.selected .char-text {
+            color: var(--primary-dark);
+        }
+        .pinyin {
+            font-size: 0.7rem;
+            color: var(--secondary);
+            margin-bottom: 4px;
+            font-family: "Helvetica Neue", sans-serif;
+            letter-spacing: 0.5px;
+            min-height: 14px;
+        }
+        .char-text {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            line-height: 1;
+            transition: color 0.25s;
+        }
+        .poem-placeholder {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* ========== 第二栏：播放条 ========== */
+        .audio-section {
+            background: linear-gradient(135deg, #f0fff8, #fff);
+        }
+        .audio-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .audio-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            background: white;
+            color: var(--text-dark);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .audio-btn:hover {
+            transform: scale(1.1);
+        }
+        .audio-btn:active { transform: scale(0.95); }
+
+        .audio-btn.play {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            width: 56px;
+            height: 56px;
+            font-size: 1.4rem;
+            box-shadow: 0 3px 12px rgba(232, 120, 106, 0.4);
+        }
+        .audio-btn.prev { color: var(--secondary); }
+        .audio-btn.next { color: var(--secondary); }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 12px;
+            padding: 6px 12px;
+            background: var(--accent-light);
+            border-radius: 20px;
+            flex-wrap: wrap;
+        }
+        .speed-label {
+            font-size: 0.78rem;
+            color: var(--text-medium);
+            font-weight: 600;
+        }
+        .speed-buttons {
+            display: flex;
+            gap: 3px;
+            flex-wrap: wrap;
+        }
+        .speed-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            background: white;
+            color: var(--text-medium);
+            transition: all 0.2s;
+            min-width: 32px;
+        }
+        .speed-btn:hover { background: var(--primary-light); color: white; }
+        .speed-btn.active {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .play-progress {
+            width: 100%;
+            margin-top: 12px;
+            height: 6px;
+            background: var(--border-soft);
+            border-radius: 3px;
+            overflow: hidden;
+            display: none;
+        }
+        .play-progress.show { display: block; }
+        .play-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 3px;
+        }
+
+        /* ========== 第三栏：田字格练字 ========== */
+        .tianzi-section {
+            background: linear-gradient(135deg, #fffef8, #fff);
+        }
+        .tianzi-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .tianzi-grid {
+            width: 280px;
+            height: 280px;
+            border: 3px solid var(--tian-grid);
+            border-radius: 8px;
+            position: relative;
+            background: #fffef5;
+            box-shadow: inset 0 0 10px rgba(212, 168, 134, 0.1);
+        }
+        .tianzi-grid::before,
+        .tianzi-grid::after {
+            content: "";
+            position: absolute;
+            background: var(--tian-grid);
+            opacity: 0.3;
+        }
+        .tianzi-grid::before {
+            top: 0;
+            left: 50%;
+            width: 1px;
+            height: 100%;
+            border-left: 2px dashed var(--tian-grid);
+            background: none;
+        }
+        .tianzi-grid::after {
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            border-top: 2px dashed var(--tian-grid);
+            background: none;
+        }
+        /* 田字格对角虚线 */
+        .tianzi-diag {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .tianzi-diag line {
+            stroke: var(--tian-grid);
+            stroke-width: 1;
+            stroke-dasharray: 6 4;
+            opacity: 0.3;
+        }
+
+        .tianzi-char {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 200px;
+            font-family: "KaiTi", "STKaiti", "楷体", serif;
+            color: #d0d0d0;
+            user-select: none;
+            z-index: 1;
+        }
+
+        .tianzi-strokes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .tianzi-strokes svg {
+            width: 100%;
+            height: 100%;
+        }
+        .stroke-path {
+            fill: none;
+            stroke: #1a1a1a;
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .stroke-path.shown {
+            opacity: 1;
+        }
+        .stroke-path.current {
+            stroke: var(--primary-dark);
+            stroke-width: 10;
+            opacity: 1;
+        }
+
+        .tianzi-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-light);
+            font-size: 0.9rem;
+            text-align: center;
+            z-index: 0;
+        }
+
+        /* HanziWriter 渲染的汉字 —— 确保居中 */
+        #hanziTarget {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        #hanziTarget svg {
+            display: block;
+            margin: auto;
+        }
+
+        .tianzi-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .tianzi-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .tianzi-btn:hover { transform: scale(1.1); }
+        .tianzi-btn:active { transform: scale(0.95); }
+        .tianzi-btn.play {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+            color: white;
+            width: 52px;
+            height: 52px;
+            font-size: 1.3rem;
+            box-shadow: 0 3px 12px rgba(108, 191, 165, 0.4);
+        }
+        .tianzi-btn.prev { color: var(--primary); }
+        .tianzi-btn.next { color: var(--primary); }
+
+        .stroke-info {
+            font-size: 0.8rem;
+            color: var(--text-medium);
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        /* ========== 第四栏：作者信息 ========== */
+        .author-section {
+            background: linear-gradient(135deg, #f8f4ff, #fff);
+        }
+        .author-info {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+        .author-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
+            box-shadow: 0 3px 10px rgba(232, 120, 106, 0.2);
+        }
+        .author-details {
+            flex: 1;
+        }
+        .author-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+        .author-year {
+            font-size: 0.85rem;
+            color: var(--secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .author-desc {
+            font-size: 0.9rem;
+            color: var(--text-medium);
+            line-height: 1.7;
+            font-style: italic;
+        }
+
+        /* 创作背景样式 */
+        .background-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 2px dashed var(--border-soft);
+        }
+        .background-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .background-item {
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            background: linear-gradient(135deg, #fffaf5, #fff8f0);
+            border-radius: 10px;
+            border-left: 3px solid var(--primary-light);
+        }
+        .background-item:last-child { margin-bottom: 0; }
+        .bg-label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 6px;
+            font-style: normal;
+        }
+        .background-item p {
+            font-size: 0.88rem;
+            color: var(--text-dark);
+            line-height: 1.8;
+            font-style: italic;
+            margin: 0;
+        }
+
+        /* ========== 第五栏：诗意介绍 ========== */
+        .meaning-section {
+            background: linear-gradient(135deg, #f0fffc, #fff);
+        }
+        .meaning-text {
+            font-size: 0.92rem;
+            color: var(--text-medium);
+            line-height: 1.8;
+            font-style: italic;
+        }
+        .meaning-text p {
+            margin-bottom: 10px;
+        }
+        .meaning-text p:last-child { margin-bottom: 0; }
+
+        /* ========== 空状态 ========== */
+        .empty-hint {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 16px;
+            font-style: italic;
+        }
+
+        /* ========== Toast 提示 ========== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text-dark);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 0.9rem;
+            z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.5rem; }
+            .tianzi-grid { width: 220px; height: 220px; }
+            .tianzi-char { font-size: 160px; }
+            .char-text { font-size: 1.3rem; }
+            .input-section { flex-direction: column; }
+            .text-input { width: 100%; }
+            .audio-bar { gap: 8px; }
+            .speed-control { margin-left: 0; }
+            .author-info { flex-direction: column; align-items: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景装饰 -->
+    <div class="bg-decoration">
+        <svg class="cloud cloud-1" viewBox="0 0 100 60"><path d="M20,40 Q10,40 10,30 Q5,30 5,25 Q5,15 15,15 Q20,5 35,10 Q50,5 55,15 Q70,10 75,20 Q85,20 85,30 Q90,30 90,40 Q90,50 80,50 L20,50 Q10,50 20,40Z" fill="var(--primary)"/></svg>
+        <svg class="cloud cloud-2" viewBox="0 0 100 60"><path d="M20,40 Q10,40 10,30 Q5,30 5,25 Q5,15 15,15 Q20,5 35,10 Q50,5 55,15 Q70,10 75,20 Q85,20 85,30 Q90,30 90,40 Q90,50 80,50 L20,50 Q10,50 20,40Z" fill="var(--secondary)"/></svg>
+        <svg class="cloud cloud-3" viewBox="0 0 100 60"><path d="M20,40 Q10,40 10,30 Q5,30 5,25 Q5,15 15,15 Q20,5 35,10 Q50,5 55,15 Q70,10 75,20 Q85,20 85,30 Q90,30 90,40 Q90,50 80,50 L20,50 Q10,50 20,40Z" fill="var(--accent)"/></svg>
+        <svg class="cloud cloud-4" viewBox="0 0 100 60"><path d="M20,40 Q10,40 10,30 Q5,30 5,25 Q5,15 15,15 Q20,5 35,10 Q50,5 55,15 Q70,10 75,20 Q85,20 85,30 Q90,30 90,40 Q90,50 80,50 L20,50 Q10,50 20,40Z" fill="var(--primary)"/></svg>
+    </div>
+
+    <div class="app-container">
+
+        <!-- 标题区 -->
+        <div class="header">
+            <span class="lantern left">🏮</span>
+            <h1>古诗中文学习</h1>
+            <span class="subtitle">Aprender Chino con Poesía Clásica</span>
+            <span class="lantern right">🏮</span>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="input-section">
+            <label class="upload-btn" for="fileInput">
+                <span>📷</span>
+                <span>上传图片</span>
+            </label>
+            <input type="file" id="fileInput" accept="image/*">
+            <input type="text" class="text-input" id="textInput" placeholder="输入古诗文本，如：床前明月光，疑是地上霜。举头望明月，低头思故乡。">
+            <button class="generate-btn" id="generateBtn">生成 ✨</button>
+            <div class="ocr-status" id="ocrStatus"></div>
+        </div>
+
+        <!-- 五栏内容区 -->
+        <div class="poem-sections">
+
+            <!-- 第一栏：文字信息栏（带拼音） -->
+            <div class="section-card poem-text-section">
+                <div class="section-title">
+                    <span class="icon">📖</span>
+                    <span>诗句 · Pinyin</span>
+                    <span class="es-label">Texto del poema con pinyin</span>
+                </div>
+                <div class="poem-text" id="poemText">
+                    <div class="poem-placeholder">上传图片或输入古诗文本后，这里将显示诗句和拼音</div>
+                </div>
+            </div>
+
+            <!-- 第二栏：播放条 -->
+            <div class="section-card audio-section">
+                <div class="section-title">
+                    <span class="icon">🔊</span>
+                    <span>语音播放 · Audio</span>
+                    <span class="es-label">Reproducción de audio</span>
+                </div>
+                <div class="audio-bar">
+                    <button class="audio-btn prev" id="audioPrev" title="上一句">⏮</button>
+                    <button class="audio-btn play" id="audioPlay" title="播放/暂停">▶</button>
+                    <button class="audio-btn next" id="audioNext" title="下一句">⏭</button>
+                    <div class="speed-control">
+                        <span class="speed-label">语速</span>
+                        <div class="speed-buttons">
+                            <button class="speed-btn" data-speed="0.5">0.5</button>
+                            <button class="speed-btn" data-speed="0.6">0.6</button>
+                            <button class="speed-btn" data-speed="0.7">0.7</button>
+                            <button class="speed-btn" data-speed="0.8">0.8</button>
+                            <button class="speed-btn" data-speed="0.9">0.9</button>
+                            <button class="speed-btn active" data-speed="1.0">1.0</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="play-progress" id="playProgress">
+                    <div class="play-progress-bar" id="playProgressBar"></div>
+                </div>
+            </div>
+
+            <!-- 第三栏：田字格练字 -->
+            <div class="section-card tianzi-section">
+                <div class="section-title">
+                    <span class="icon">✏️</span>
+                    <span>练字 · Caligrafía</span>
+                    <span class="es-label">Práctica de escritura china</span>
+                </div>
+                <div class="tianzi-container">
+                    <div class="tianzi-grid" id="tianziGrid">
+                        <svg class="tianzi-diag" viewBox="0 0 280 280">
+                            <line x1="0" y1="0" x2="280" y2="280"/>
+                            <line x1="280" y1="0" x2="0" y2="280"/>
+                        </svg>
+                        <div class="tianzi-placeholder" id="tianziPlaceholder">
+                            点击上方诗句中的字<br>开始练字
+                        </div>
+                        <!-- HanziWriter 渲染目标 -->
+                        <div id="hanziTarget" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;display:flex;align-items:center;justify-content:center;"></div>
+                    </div>
+                    <div class="stroke-info" id="strokeInfo"></div>
+                    <div class="tianzi-controls">
+                        <button class="tianzi-btn prev" id="strokePrev" title="上一笔">⏮</button>
+                        <button class="tianzi-btn play" id="strokePlay" title="播放笔顺动画">▶</button>
+                        <button class="tianzi-btn next" id="strokeNext" title="下一笔">⏭</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第四栏：作者信息 -->
+            <div class="section-card author-section">
+                <div class="section-title">
+                    <span class="icon">🧑‍🎓</span>
+                    <span>作者 · Autor</span>
+                    <span class="es-label">Información del autor</span>
+                </div>
+                <div class="author-info" id="authorInfo">
+                    <div class="empty-hint">生成诗句后将显示作者信息</div>
+                </div>
+            </div>
+
+            <!-- 第五栏：诗意介绍 -->
+            <div class="section-card meaning-section">
+                <div class="section-title">
+                    <span class="icon">📜</span>
+                    <span>诗意 · Significado</span>
+                    <span class="es-label">Traducción y explicación del poema</span>
+                </div>
+                <div class="meaning-text" id="meaningText">
+                    <div class="empty-hint">生成诗句后将显示诗意翻译</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+    // ==========================================
+    // 数据：常用古诗拼音 + 西语翻译
+    // ==========================================
+    const POEM_DATABASE = [
+        {
+            text: "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
+            pinyin: ["chuáng","qián","míng","yuè","guāng","，","yí","shì","dì","shàng","shuāng","。","jǔ","tóu","wàng","míng","yuè","，","dī","tóu","sī","gù","xiāng","。"],
+            author: "李白",
+            authorEs: "Li Bai",
+            year: "701–762 · 唐代",
+            yearEs: "701–762 · Dinastía Tang",
+            authorBio: "Li Bai (701-762) fue uno de los poetas más célebres de la dinastía Tang, conocido como el 'Inmortal de la Poesía' (诗仙). Su obra se caracteriza por su imaginación desbordante, amor por la naturaleza y el vino. Escribió más de mil poemas que reflejan la libertad espiritual y el romanticismo chino.",
+            background: {
+                title: "Contexto de creación · 创作背景",
+                context: "Li Bai escribió este poema alrededor del año 726, cuando tenía unos 26 años. En ese momento, viajaba lejos de su tierra natal en Sichuan, residiendo en la posada de Yangzhou (actual provincia de Jiangsu). Era la época del Festival de mediados de otoño (中秋节), la festividad más importante dedicada a la luna llena y a la reunión familiar en la cultura china.",
+                purpose: "El propósito del poema es expresar la profunda nostalgia y soledad que sentía el poeta al estar lejos de casa durante una noche de luna llena. En la antigüedad china, viajar lejos de la familia era una experiencia dolorosa, y la luna llena simbolizaba la reunión y el hogar.",
+                thought: "El poema transmite el anhelo del retorno al hogar (思乡) y la melancolía de la soledad. La luna, símbolo universal de reunión familiar en China, se convierte en el espejo de los sentimientos del poeta. La aparente sencillez del lenguaje contrasta con la profundidad emocional, reflejando el ideal chino de 'grandes emociones en palabras simples' (大道至简). Este poema se ha convertido en la expresión definitiva de la nostalgia en la literatura china."
+            },
+            meaning: [
+                "Ante mi cama brilla la luz de la luna clara,",
+                "como si fuera escarcha sobre la tierra.",
+                "Levanto la cabeza y contemplo la luna brillante,",
+                "bajo la cabeza y pienso en mi tierra natal."
+            ],
+            meaningTitle: "Pensamiento Nocturno Sereno (静夜思)",
+            meaningDesc: "Este poema expresa la profunda nostalgia del poeta por su hogar lejos de casa. La luz de la luna, confundida con la escarcha, evoca la soledad de una noche fría. La luna es un símbolo clásico de reunión familiar en la cultura china, y su contemplación intensifica el anhelo del retorno."
+        },
+        {
+            text: "春眠不觉晓，处处闻啼鸟。夜来风雨声，花落知多少。",
+            pinyin: ["chūn","mián","bù","jué","xiǎo","，","chù","chù","wén","tí","niǎo","。","yè","lái","fēng","yǔ","shēng","，","huā","luò","zhī","duō","shǎo","。"],
+            author: "孟浩然",
+            authorEs: "Meng Haoran",
+            year: "689–740 · 唐代",
+            yearEs: "689–740 · Dinastía Tang",
+            authorBio: "Meng Haoran (689-740) fue un destacado poeta de la dinastía Tang, famoso por sus poemas sobre la naturaleza y la vida pastoral. Su estilo es sencillo, natural y lleno de serenidad. Vivió gran parte de su vida en retiro en las montañas de su tierra natal, en Hubei, rechazando cargos políticos para dedicarse a la poesía.",
+            background: {
+                title: "Contexto de creación · 创作背景",
+                context: "Meng Haoran escribió este poema durante su retiro en las montañas de鹿门 (Lumen), en su tierra natal de Xiangyang, provincia de Hubei. Era primavera y el poeta, tras una noche de lluvia primaveral, despertó rodeado del canto de los pájaros. La escena le inspiró esta reflexión sobre la belleza efímera de la naturaleza.",
+                purpose: "El propósito es capturar la sensación del despertar primaveral: la alegría del canto de los pájaros contrasta con la preocupación por las flores dañadas por la tormenta nocturna. El poeta busca expresar su amor por la naturaleza y su sensibilidad hacia el paso del tiempo.",
+                thought: "El poema refleja una filosofía de armonía con la naturaleza (天人合一) y una actitud de serena aceptación ante lo efímero de la belleza. No hay tristeza profunda, sino una delicada melancolía que aprecia la fragilidad como parte de la belleza misma. Es un ejemplo perfecto del ideal chino de 'lo natural y sin artificio' (自然无为), donde la emociión surge espontáneamente de la observación sencilla."
+            },
+            meaning: [
+                "En primavera duermo sin notar el amanecer,",
+                "por todas partes escucho el canto de los pájaros.",
+                "Durante la noche se oyeron el viento y la lluvia,",
+                "¿cuántas flores habrán caído?"
+            ],
+            meaningTitle: "Amanecer de Primavera (春晓)",
+            meaningDesc: "Este poema captura la belleza y la fragilidad de la primavera. El poeta despierta rodeado del canto de los pájaros y recuerda la tormenta nocturna, preguntándose cuántas flores han caído. Es una reflexión delicada sobre el paso del tiempo y la belleza efímera de la naturaleza."
+        },
+        {
+            text: "白日依山尽，黄河入海流。欲穷千里目，更上一层楼。",
+            pinyin: ["bái","rì","yī","shān","jìn","，","huáng","hé","rù","hǎi","liú","。","yù","qióng","qiān","lǐ","mù","，","gèng","shàng","yī","céng","lóu","。"],
+            author: "王之涣",
+            authorEs: "Wang Zhihuan",
+            year: "688–742 · 唐代",
+            yearEs: "688–742 · Dinastía Tang",
+            authorBio: "Wang Zhihuan (688-742) fue un poeta de la dinastía Tang, conocido por sus poemas de paisajes grandiosos y su visión filosófica. Aunque solo se conservan seis de sus poemas, son considerados obras maestras de la poesía china clásica. Era famoso por su personalidad libre y su amor por los viajes.",
+            background: {
+                title: "Contexto de creación · 创作背景",
+                context: "Wang Zhihuan escribió este poema durante una visita a la Torre de la Grulla (鹳雀楼), un famoso mirador situado en Puzhou (actual Yongji, provincia de Shanxi), a orillas del río Amarillo. La torre, construida en la dinastía Zhou del Norte, era un destino popular donde los literatos subían a contemplar la confluencia del río Amarillo con las montañas.",
+                purpose: "El propósito del poema es doble: por un lado, describir la magnificencia del paisaje que se divisa desde la torre; por otro, transmitir una enseñanza filosófica: para ampliar la visión y alcanzar mayores alturas, es necesario esforzarse más y elevarse. Es una exhortación a la superación constante.",
+                thought: "El poema encarna el espíritu de ambición intelectual y la búsqueda de la excelencia (志存高远) propio de la dinastía Tang, una época de gran expansión y confianza cultural. Los dos primeros versos pintan un panorama grandioso que simboliza la vastedad del mundo; los dos últimos elevan esta imagen a una metáfora universal: el conocimiento y la sabiduría requieren esfuerzo continuo, y cada nivel alcanzado revela horizontes nuevos. Es uno de los poemas más citados en China como motivación para el estudio y el progreso personal."
+            },
+            meaning: [
+                "El sol pálido se pone tras las montañas,",
+                "el río Amarillo fluye hacia el mar.",
+                "Si deseas ver mil millas más allá,",
+                "sube un piso más en la torre."
+            ],
+            meaningTitle: "Torre de la Grulla (登鹳雀楼)",
+            meaningDesc: "Este poema usa la imagen de una torre con vista panorámica para expresar una profunda verdad: para alcanzar mayor comprensión y visión, uno debe elevarse. Es una metáfora del esfuerzo constante y la superación personal."
+        },
+        {
+            text: "千山鸟飞绝，万径人踪灭。孤舟蓑笠翁，独钓寒江雪。",
+            pinyin: ["qiān","shān","niǎo","fēi","jué","，","wàn","jìng","rén","zōng","miè","。","gū","zhōu","suō","lì","wēng","，","dú","diào","hán","jiāng","xuě","。"],
+            author: "柳宗元",
+            authorEs: "Liu Zongyuan",
+            year: "773–819 · 唐代",
+            yearEs: "773–819 · Dinastía Tang",
+            authorBio: "Liu Zongyuan (773-819) fue un escritor, poeta y político de la dinastía Tang. Es reconocido como uno de los ocho grandes maestros de la prosa china (唐宋八大家). Sus poemas reflejan soledad, determinación y una profunda conexión con la naturaleza. Participó en reformas políticas que fracasaron, lo que marcó su vida y obra.",
+            background: {
+                title: "Contexto de creación · 创作背景",
+                context: "Liu Zongyuan escribió este poema en el año 805, tras ser desterrado a Yongzhou (actual Hunan) debido al fracaso de la Reforma de Yongzhen, un movimiento político reformista que duró apenas 146 días. Exiliado en una región remota y hostil, rodeado de montañas nevadas y ríos solitarios, el poeta canalizó su frustración política y su soledad en esta imagen poética.",
+                purpose: "El propósito es expresar, a través de la imagen del pescador solitario en la nieve, su propia determinación de mantener la integridad moral y la dignidad a pesar del exilio y la incomprensión. El viejo pescador es un alter ego del poeta: solo, pero inconmovible.",
+                thought: "El poema es una de las expresiones más poderosas del ideal chino del 'ermitaño noble' (孤高傲世): el hombre que conserva sus principios en la adversidad. El paisaje vacío y helado representa el entorno político hostil; el pescador solitario que pesca en la nieve simboliza la firmeza espiritual, la independencia y la negativa a rendirse. La soledad no es debilidad sino fortaleza. Este espíritu de integridad inquebrantable (贞固) ha inspirado a generaciones de intelectuales chinos facing difíciles circunstancias."
+            },
+            meaning: [
+                "Mil montañas, las aves han desaparecido,",
+                "diez mil senderos, las huellas humanas se han borrado.",
+                "Un viejo con sombrero de paja en una barca solitaria,",
+                "pesca solo en la nieve del río frío."
+            ],
+            meaningTitle: "Río Nevada (江雪)",
+            meaningDesc: "Este poema pinta un paisaje invernal solitario y majestuoso. El pescador solitario en medio de la nieve representa la pureza espiritual, la independencia y la perseverancia ante la adversidad. Es una imagen poderosa de soledad y dignidad."
+        }
+    ];
+
+    // ==========================================
+    // 拼音通用映射表
+    // ==========================================
+    const PINYIN_MAP = {
+        '一':'yī','二':'èr','三':'sān','四':'sì','五':'wǔ','六':'liù','七':'qī','八':'bā','九':'jiǔ','十':'shí',
+        '春':'chūn','夏':'xià','秋':'qiū','冬':'dōng','日':'rì','月':'yuè','星':'xīng','辰':'chén','风':'fēng','雨':'yǔ',
+        '雪':'xuě','云':'yún','雷':'léi','山':'shān','水':'shuǐ','河':'hé','海':'hǎi','林':'lín','花':'huā','草':'cǎo',
+        '木':'mù','石':'shí','金':'jīn','火':'huǒ','土':'tǔ','天':'tiān','地':'dì','人':'rén','心':'xīn','口':'kǒu',
+        '手':'shǒu','目':'mù','耳':'ěr','头':'tóu','足':'zú','大':'dà','小':'xiǎo','上':'shàng','下':'xià','中':'zhōng',
+        '明':'míng','光':'guāng','暗':'àn','白':'bái','黑':'hēi','红':'hóng','黄':'huáng','绿':'lǜ','蓝':'lán','紫':'zǐ',
+        '高':'gāo','低':'dī','长':'cháng','短':'duǎn','多':'duō','少':'shǎo','好':'hǎo','美':'měi','善':'shàn','恶':'è',
+        '前':'qián','后':'hòu','左':'zuǒ','右':'yòu','内':'nèi','外':'wài','开':'kāi','关':'guān','来':'lái','去':'qù',
+        '床':'chuáng','前':'qián','疑':'yí','是':'shì','霜':'shuāng','举':'jǔ','望':'wàng','低':'dī','思':'sī','故':'gù','乡':'xiāng',
+        '眠':'mián','不':'bù','觉':'jué','晓':'xiǎo','处':'chù','闻':'wén','啼':'tí','鸟':'niǎo','夜':'yè','声':'shēng','落':'luò','知':'zhī',
+        '依':'yī','尽':'jìn','黄':'huáng','入':'rù','流':'liú','欲':'yù','穷':'qióng','千':'qiān','里':'lǐ','更':'gèng','层':'céng','楼':'lóu',
+        '万':'wàn','径':'jìng','踪':'zōng','灭':'miè','孤':'gū','舟':'zhōu','蓑':'suō','笠':'lì','翁':'wēng','独':'dú','钓':'diào','寒':'hán','江':'jiāng',
+        '绝':'jué','飞':'fēi','远':'yuǎn','近':'jìn','静':'jìng','夜':'yè','思':'sī','望':'wàng','乡':'xiāng','念':'niàn','归':'guī','家':'jiā',
+        '青':'qīng','山':'shān','踏':'tà','歌':'gē','行':'xíng','同':'tóng','为':'wéi','何':'hé','采':'cǎi','菊':'jú','东':'dōng','篱':'lí','悠':'yōu','然':'rán','南':'nán','见':'jiàn'
+    };
+
+    // ==========================================
+    // 笔顺系统：使用 HanziWriter 引擎
+    // HanziWriter 内置完整的汉字笔顺 SVG 数据
+    // ==========================================
+    let hanziWriter = null;
+    let currentStrokeCount = 0;   // 当前字的总笔画数
+
+    // 检查 HanziWriter 是否加载成功
+    function isHanziWriterReady() {
+        return typeof HanziWriter !== 'undefined';
+    }
+
+    // ==========================================
+    // 全局状态
+    // ==========================================
+    let currentPoem = null;       // 当前诗句对象
+    let currentChars = [];        // 当前诗句中的所有汉字（不含标点）
+    let selectedChar = null;      // 当前选中的字
+    let shownStrokes = 0;         // 已显示的笔画数
+    let strokePlaying = false;    // 笔顺动画是否正在播放
+    let strokeTimer = null;       // 笔顺动画计时器
+
+    // 音频状态
+    let audioPlaying = false;
+    let audioCurrentIndex = 0;    // 当前播放到第几句
+    let audioSpeed = 1;
+    let audioUtterance = null;
+
+    // ==========================================
+    // 工具函数
+    // ==========================================
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function isPunctuation(char) {
+        return /[，。！？、；：""''（）《》【】\s,.\!?;:]/.test(char);
+    }
+
+    function getPinyin(char) {
+        if (isPunctuation(char)) return char;
+        if (PINYIN_MAP[char]) return PINYIN_MAP[char];
+        // 未知字符返回占位
+        return '?';
+    }
+
+    // ==========================================
+    // 生成诗句
+    // ==========================================
+    function generatePoem(text) {
+        if (!text || text.trim() === '') {
+            showToast('请输入或上传古诗文本');
+            return;
+        }
+
+        // 尝试匹配数据库中的诗
+        let matched = null;
+        for (const p of POEM_DATABASE) {
+            if (text.includes(p.text.substring(0, 4)) || p.text.includes(text.trim().substring(0, 4))) {
+                matched = p;
+                break;
+            }
+        }
+
+        // 如果匹配到了数据库中的诗，使用完整数据
+        let poemText, pinyinArr, authorInfo, meaningData;
+        if (matched) {
+            poemText = matched.text;
+            pinyinArr = matched.pinyin;
+            authorInfo = {
+                name: matched.author,
+                nameEs: matched.authorEs,
+                year: matched.year,
+                yearEs: matched.yearEs,
+                bio: matched.authorBio,
+                background: matched.background
+            };
+            meaningData = {
+                title: matched.meaningTitle,
+                lines: matched.meaning,
+                desc: matched.meaningDesc
+            };
+        } else {
+            // 用户自定义文本，自动生成拼音
+            poemText = text.trim();
+            pinyinArr = [];
+            for (const ch of poemText) {
+                pinyinArr.push(getPinyin(ch));
+            }
+            authorInfo = {
+                name: '佚名',
+                nameEs: 'Anónimo',
+                year: '年代不详',
+                yearEs: 'Época desconocida',
+                bio: 'Este poema fue proporcionado por el usuario. La información del autor no está disponible en la base de datos.',
+                background: null
+            };
+            meaningData = {
+                title: 'Poema del usuario',
+                lines: ['(Traducción no disponible para este texto personalizado)',
+                        'Por favor, consulte una fuente especializada para la traducción al español.'],
+                desc: 'Este es un texto personalizado ingresado por el usuario. La traducción y el análisis detallado no están disponibles en la base de datos actual.'
+            };
+        }
+
+        currentPoem = { text: poemText, pinyin: pinyinArr };
+        renderPoemText(poemText, pinyinArr);
+        renderAuthor(authorInfo);
+        renderMeaning(meaningData);
+
+        // 重置选中状态
+        selectedChar = null;
+        clearTianzi();
+        showToast('诗句生成成功！');
+    }
+
+    // ==========================================
+    // 渲染第一栏：诗句带拼音
+    // ==========================================
+    function renderPoemText(text, pinyinArr) {
+        const container = document.getElementById('poemText');
+        container.innerHTML = '';
+
+        currentChars = [];
+
+        // 按句分割（逗号、句号等）
+        const lines = text.split(/([，。！？])/);
+        const formattedLines = [];
+        let currentLine = '';
+
+        for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            if (ch === '，' || ch === '，' || ch === ',' ) {
+                formattedLines.push(currentLine + ch);
+                currentLine = '';
+            } else if (ch === '。' || ch === '.' || ch === '！' || ch === '？' || ch === '!' || ch === '?') {
+                formattedLines.push(currentLine + ch);
+                currentLine = '';
+            } else {
+                currentLine += ch;
+            }
+        }
+        if (currentLine) formattedLines.push(currentLine);
+
+        let pinyinIdx = 0;
+        for (const line of formattedLines) {
+            if (!line) continue;
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'poem-line';
+
+            for (const ch of line) {
+                const charDiv = document.createElement('div');
+                charDiv.className = 'poem-char';
+
+                const pinyinSpan = document.createElement('span');
+                pinyinSpan.className = 'pinyin';
+                const py = pinyinArr[pinyinIdx] || getPinyin(ch);
+                pinyinIdx++;
+                pinyinSpan.textContent = isPunctuation(ch) ? '' : py;
+
+                const charSpan = document.createElement('span');
+                charSpan.className = 'char-text';
+                charSpan.textContent = ch;
+
+                charDiv.appendChild(pinyinSpan);
+                charDiv.appendChild(charSpan);
+
+                if (!isPunctuation(ch)) {
+                    currentChars.push({ char: ch, pinyin: py, element: charDiv });
+                    charDiv.addEventListener('click', () => selectChar(ch, py, charDiv));
+                }
+
+                lineDiv.appendChild(charDiv);
+            }
+            container.appendChild(lineDiv);
+        }
+    }
+
+    // ==========================================
+    // 选择字 -> 田字格
+    // ==========================================
+    function selectChar(char, pinyin, element) {
+        // 取消之前选中
+        document.querySelectorAll('.poem-char.selected').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+
+        selectedChar = char;
+        currentStrokeIndex = 0;
+        shownStrokes = 0;
+
+        renderTianzi(char);
+        updateStrokeInfo();
+        showToast(`选中: ${char} (${pinyin})`);
+    }
+
+    // ==========================================
+    // 渲染田字格 —— 使用 HanziWriter
+    // ==========================================
+    function renderTianzi(char) {
+        const placeholder = document.getElementById('tianziPlaceholder');
+        placeholder.style.display = 'none';
+
+        const target = document.getElementById('hanziTarget');
+        target.innerHTML = '';
+
+        stopStrokeAnimation();
+        shownStrokes = 0;
+
+        if (!isHanziWriterReady()) {
+            // 降级方案：用文字显示
+            const fallback = document.createElement('div');
+            fallback.style.cssText = 'display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:200px;font-family:KaiTi,STKaiti,楷体,serif;color:#d0d0d0;';
+            fallback.textContent = char;
+            target.appendChild(fallback);
+            document.getElementById('strokeInfo').textContent = '笔顺库未加载，仅显示字形';
+            return;
+        }
+
+        try {
+            // 创建 HanziWriter 实例
+            // width/height 设为 280 与田字格尺寸一致
+            // padding 控制字符在格子中的留白
+            // showOutline: true 显示灰色底字（用户要求的灰色字体）
+            // showCharacter: false 初始不显示完整字（通过笔顺逐步显示）
+            hanziWriter = HanziWriter.create('hanziTarget', char, {
+                width: 260,
+                height: 260,
+                padding: 10,
+                showOutline: true,        // 显示灰色底字
+                showCharacter: false,     // 不显示完整黑色字（通过笔画逐步显示）
+                strokeAnimationSpeed: 1,
+                delayBetweenStrokes: 300,
+                strokeColor: '#1a1a1a',   // 笔迹黑色
+                outlineColor: '#d0d0d0',  // 底字灰色
+                drawingWidth: 24,
+                radicalColor: '#333333',
+                onLoadCharDataSuccess: function(data) {
+                    currentStrokeCount = data.strokes.length;
+                    updateStrokeInfo();
+                },
+                onLoadCharDataError: function() {
+                    // 字符数据加载失败，降级显示
+                    target.innerHTML = '';
+                    const fallback = document.createElement('div');
+                    fallback.style.cssText = 'display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:180px;font-family:KaiTi,STKaiti,楷体,serif;color:#d0d0d0;';
+                    fallback.textContent = char;
+                    target.appendChild(fallback);
+                    document.getElementById('strokeInfo').textContent = '该字暂无笔顺数据';
+                    currentStrokeCount = 0;
+                    hanziWriter = null;
+                }
+            });
+        } catch(e) {
+            console.error('HanziWriter error:', e);
+            document.getElementById('strokeInfo').textContent = '笔顺渲染异常';
+        }
+    }
+
+    function clearTianzi() {
+        document.getElementById('tianziPlaceholder').style.display = 'block';
+        document.getElementById('hanziTarget').innerHTML = '';
+        document.getElementById('strokeInfo').textContent = '';
+        selectedChar = null;
+        shownStrokes = 0;
+        currentStrokeCount = 0;
+        stopStrokeAnimation();
+        hanziWriter = null;
+    }
+
+    // ==========================================
+    // 笔顺动画控制 —— 基于 HanziWriter
+    // ==========================================
+    function updateStrokeInfo() {
+        if (!selectedChar) {
+            document.getElementById('strokeInfo').textContent = '';
+            return;
+        }
+        const total = currentStrokeCount;
+        if (total === 0) {
+            document.getElementById('strokeInfo').textContent = '加载中...';
+            return;
+        }
+        const current = Math.min(shownStrokes, total);
+        document.getElementById('strokeInfo').textContent = `第 ${current} / ${total} 笔`;
+    }
+
+    // 逐笔显示到第 n 笔（n 从 0 开始计数，表示显示 n+1 笔）
+    // 先隐藏整个字，然后依次动画每一笔
+    function showStrokesUpTo(n) {
+        if (!hanziWriter || currentStrokeCount === 0) return;
+
+        // 先隐藏整个字
+        hanziWriter.hideCharacter({ duration: 0 });
+
+        // 依次显示每一笔
+        for (let i = 0; i <= n && i < currentStrokeCount; i++) {
+            hanziWriter.animateStroke(i);
+        }
+    }
+
+    // 下一笔：逐笔显示
+    function strokeNext() {
+        if (!selectedChar) { showToast('请先选择一个字'); return; }
+        if (!hanziWriter) { showToast('该字暂无笔顺数据'); return; }
+        if (currentStrokeCount === 0) { showToast('笔顺数据加载中，请稍候'); return; }
+
+        if (shownStrokes < currentStrokeCount) {
+            shownStrokes++;
+            // 只动画新出现的这一笔（之前的笔画保持显示）
+            hanziWriter.animateStroke(shownStrokes - 1);
+            updateStrokeInfo();
+        } else {
+            showToast('已完成所有笔画');
+        }
+    }
+
+    // 上一笔：回退一笔
+    function strokePrev() {
+        if (!selectedChar) { showToast('请先选择一个字'); return; }
+        if (!hanziWriter) { showToast('该字暂无笔顺数据'); return; }
+        if (currentStrokeCount === 0) { showToast('笔顺数据加载中，请稍候'); return; }
+
+        if (shownStrokes > 0) {
+            shownStrokes--;
+            // 需要重新渲染到第 shownStrokes 笔
+            showStrokesUpTo(shownStrokes - 1);
+            updateStrokeInfo();
+        } else {
+            showToast('已是第一笔');
+        }
+    }
+
+    // 播放完整笔顺动画
+    function playStrokeAnimation() {
+        if (!selectedChar) { showToast('请先选择一个字'); return; }
+        if (!hanziWriter) { showToast('该字暂无笔顺数据'); return; }
+        if (currentStrokeCount === 0) { showToast('笔顺数据加载中，请稍候'); return; }
+
+        if (strokePlaying) {
+            stopStrokeAnimation();
+            return;
+        }
+
+        // 重置到空白
+        shownStrokes = 0;
+        hanziWriter.hideCharacter({ duration: 0, onComplete: () => {
+            // 使用 animateCharacter 播放完整笔顺
+            hanziWriter.animateCharacter({
+                onComplete: function() {
+                    shownStrokes = currentStrokeCount;
+                    updateStrokeInfo();
+                    stopStrokeAnimation();
+                    showToast('笔顺播放完成');
+                }
+            });
+        }});
+
+        strokePlaying = true;
+        document.getElementById('strokePlay').textContent = '⏸';
+
+        // 用计时器跟踪笔画进度（用于显示进度信息）
+        let strokeIdx = 0;
+        const strokeDuration = 700;
+        strokeTimer = setInterval(() => {
+            strokeIdx++;
+            if (strokeIdx <= currentStrokeCount) {
+                shownStrokes = strokeIdx;
+                updateStrokeInfo();
+            } else {
+                stopStrokeAnimation();
+            }
+        }, strokeDuration);
+    }
+
+    function stopStrokeAnimation() {
+        strokePlaying = false;
+        document.getElementById('strokePlay').textContent = '▶';
+        if (strokeTimer) {
+            clearInterval(strokeTimer);
+            strokeTimer = null;
+        }
+    }
+
+    // ==========================================
+    // 渲染第四栏：作者信息 + 创作背景
+    // ==========================================
+    function renderAuthor(info) {
+        const container = document.getElementById('authorInfo');
+
+        let bgHtml = '';
+        if (info.background) {
+            bgHtml = `
+                <div class="background-section">
+                    <div class="background-title">${info.background.title}</div>
+                    <div class="background-item">
+                        <span class="bg-label">📅 Contexto histórico</span>
+                        <p>${info.background.context}</p>
+                    </div>
+                    <div class="background-item">
+                        <span class="bg-label">🎯 Propósito</span>
+                        <p>${info.background.purpose}</p>
+                    </div>
+                    <div class="background-item">
+                        <span class="bg-label">💭 Pensamiento y significado</span>
+                        <p>${info.background.thought}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = `
+            <div class="author-avatar">🧑‍🎓</div>
+            <div class="author-details">
+                <div class="author-name">${info.name} · ${info.nameEs}</div>
+                <div class="author-year">${info.yearEs}</div>
+                <div class="author-desc">${info.bio}</div>
+                ${bgHtml}
+            </div>
+        `;
+    }
+
+    // ==========================================
+    // 渲染第五栏：诗意
+    // ==========================================
+    function renderMeaning(data) {
+        const container = document.getElementById('meaningText');
+        let html = `<p><strong>${data.title}</strong></p>`;
+        for (const line of data.lines) {
+            html += `<p>${line}</p>`;
+        }
+        html += `<p style="margin-top:12px; color:var(--text-dark); font-style:normal;">${data.desc}</p>`;
+        container.innerHTML = html;
+    }
+
+    // ==========================================
+    // 语音播放（Web Speech API）
+    // 完整播放第一栏（整首诗）所有内容
+    // ==========================================
+
+    // 获取整首诗的句子列表（按逗号、句号分割，保留标点用于朗读停顿）
+    function getSentences() {
+        if (!currentPoem) return [];
+        // 按标点分割，每个分割片段包含标点
+        const parts = currentPoem.text.split(/([，。！？])/);
+        const sentences = [];
+        let current = '';
+        for (const part of parts) {
+            if (part === '') continue;
+            current += part;
+            if (/[，。！？]/.test(part)) {
+                sentences.push(current);
+                current = '';
+            }
+        }
+        if (current.trim()) sentences.push(current);
+        return sentences;
+    }
+
+    // 朗读一个句子，完成后自动朗读下一句，直到全部完成
+    function speakSentence(idx) {
+        const sentences = getSentences();
+        if (idx < 0 || idx >= sentences.length) return;
+
+        // 先取消正在播放的语音
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+
+        audioUtterance = new SpeechSynthesisUtterance(sentences[idx]);
+        audioUtterance.lang = 'zh-CN';
+        // 确保语速设置生效
+        audioUtterance.rate = audioSpeed;
+        audioUtterance.pitch = 1;
+        audioUtterance.volume = 1;
+
+        // 尝试找中文语音
+        const voices = window.speechSynthesis.getVoices();
+        const zhVoice = voices.find(v => v.lang.startsWith('zh'));
+        if (zhVoice) {
+            audioUtterance.voice = zhVoice;
+        }
+
+        // 当前句子朗读结束后，自动播放下一句
+        audioUtterance.onend = () => {
+            if (audioPlaying && audioCurrentIndex < sentences.length - 1) {
+                audioCurrentIndex++;
+                // 短暂延迟后播放下一句，让停顿更自然
+                setTimeout(() => {
+                    if (audioPlaying) {
+                        speakSentence(audioCurrentIndex);
+                    }
+                }, 200);
+                updateProgress();
+            } else {
+                // 全部播放完毕
+                audioPlaying = false;
+                audioCurrentIndex = 0;
+                document.getElementById('audioPlay').textContent = '▶';
+                document.getElementById('playProgress').classList.remove('show');
+                document.getElementById('playProgressBar').style.width = '0%';
+            }
+        };
+
+        audioUtterance.onerror = (event) => {
+            console.error('Speech error:', event.error);
+            // 出错时尝试继续下一句
+            if (audioPlaying && audioCurrentIndex < sentences.length - 1) {
+                audioCurrentIndex++;
+                setTimeout(() => {
+                    if (audioPlaying) speakSentence(audioCurrentIndex);
+                }, 200);
+                updateProgress();
+            }
+        };
+
+        window.speechSynthesis.speak(audioUtterance);
+        updateProgress();
+    }
+
+    // 更新播放进度条
+    function updateProgress() {
+        const sentences = getSentences();
+        const progress = sentences.length > 0 ? ((audioCurrentIndex + 1) / sentences.length) * 100 : 0;
+        document.getElementById('playProgressBar').style.width = progress + '%';
+    }
+
+    // 播放/暂停切换
+    function toggleAudioPlay() {
+        if (!currentPoem) { showToast('请先生成诗句'); return; }
+        const sentences = getSentences();
+        if (sentences.length === 0) return;
+
+        if (audioPlaying) {
+            // 暂停播放
+            audioPlaying = false;
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+            document.getElementById('audioPlay').textContent = '▶';
+            document.getElementById('playProgress').classList.remove('show');
+        } else {
+            // 开始播放：从头播放整首诗
+            audioPlaying = true;
+            document.getElementById('audioPlay').textContent = '⏸';
+            document.getElementById('playProgress').classList.add('show');
+            // 如果当前已到最后一句，重置到第一句
+            if (audioCurrentIndex >= sentences.length) {
+                audioCurrentIndex = 0;
+            }
+            speakSentence(audioCurrentIndex);
+        }
+    }
+
+    // 上一句
+    function audioPrev() {
+        if (!currentPoem) { showToast('请先生成诗句'); return; }
+        const sentences = getSentences();
+        if (audioCurrentIndex > 0) {
+            audioCurrentIndex--;
+            if (audioPlaying) {
+                speakSentence(audioCurrentIndex);
+            } else {
+                updateProgress();
+            }
+        } else {
+            showToast('已是第一句');
+        }
+    }
+
+    // 下一句
+    function audioNext() {
+        if (!currentPoem) { showToast('请先生成诗句'); return; }
+        const sentences = getSentences();
+        if (audioCurrentIndex < sentences.length - 1) {
+            audioCurrentIndex++;
+            if (audioPlaying) {
+                speakSentence(audioCurrentIndex);
+            } else {
+                updateProgress();
+            }
+        } else {
+            showToast('已是最后一句');
+        }
+    }
+
+    // ==========================================
+    // OCR 图片识别
+    // ==========================================
+    async function performOCR(file) {
+        const statusEl = document.getElementById('ocrStatus');
+        statusEl.classList.add('show');
+        statusEl.textContent = '🔍 正在识别图片中的文字...';
+
+        try {
+            const result = await Tesseract.recognize(file, 'chi_sim+eng', {
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        statusEl.textContent = `🔍 识别中... ${Math.round(m.progress * 100)}%`;
+                    }
+                }
+            });
+
+            const text = result.data.text.trim();
+            statusEl.classList.remove('show');
+
+            if (text) {
+                // 清理文本：移除多余空白和换行
+                const cleaned = text.replace(/\n/g, '').replace(/\s+/g, '');
+                document.getElementById('textInput').value = cleaned;
+                showToast('识别成功！点击"生成"按钮');
+                // 自动生成
+                generatePoem(cleaned);
+            } else {
+                showToast('未能识别到文字，请手动输入');
+            }
+        } catch (err) {
+            statusEl.classList.remove('show');
+            showToast('识别失败：' + err.message);
+            console.error('OCR Error:', err);
+        }
+    }
+
+    // ==========================================
+    // 事件绑定
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // 文件上传
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                performOCR(file);
+            }
+        });
+
+        // 生成按钮
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            const text = document.getElementById('textInput').value;
+            generatePoem(text);
+        });
+
+        // 回车也能生成
+        document.getElementById('textInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                generatePoem(e.target.value);
+            }
+        });
+
+        // 音频控制
+        document.getElementById('audioPlay').addEventListener('click', toggleAudioPlay);
+        document.getElementById('audioPrev').addEventListener('click', audioPrev);
+        document.getElementById('audioNext').addEventListener('click', audioNext);
+
+        // 语速选择 —— 切换后立即生效
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const newSpeed = parseFloat(btn.dataset.speed);
+                audioSpeed = newSpeed;
+                showToast(`语速已设为 ${newSpeed.toFixed(1)}`);
+
+                // 如果正在播放，立即用新语速重新播放当前句
+                if (audioPlaying) {
+                    // cancel 当前语音并用新速度重新朗读当前句
+                    if (window.speechSynthesis) {
+                        window.speechSynthesis.cancel();
+                    }
+                    // 短暂延迟确保 cancel 完成
+                    setTimeout(() => {
+                        if (audioPlaying) {
+                            speakSentence(audioCurrentIndex);
+                        }
+                    }, 100);
+                }
+            });
+        });
+
+        // 田字格控制
+        document.getElementById('strokePlay').addEventListener('click', playStrokeAnimation);
+        document.getElementById('strokePrev').addEventListener('click', strokePrev);
+        document.getElementById('strokeNext').addEventListener('click', strokeNext);
+
+        // 预加载语音
+        if (window.speechSynthesis) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.getVoices();
+            };
+        }
+
+        // 默认加载一首示例诗
+        generatePoem('床前明月光，疑是地上霜。举头望明月，低头思故乡。');
+    });
+    </script>
+</body>
+</html>
